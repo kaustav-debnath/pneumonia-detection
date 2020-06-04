@@ -1,0 +1,7 @@
+Exception during training: name 'n' is not defined
+Traceback (most recent call last):
+  File "<ipython-input-10-864ae7bec22c>", line 7, in train
+    test_images(metainfo,128,128)
+  File "<ipython-input-12-f38b2aace049>", line 8, in test_images
+    print('End Iterator-->',n,'--------------------------------------------------')
+NameError: name 'n' is not defined
