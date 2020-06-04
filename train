@@ -36,8 +36,8 @@ from tensorflow.keras.models import Model,load_model
 # from sklearn.model_selection import GridSearchCV
 
 
-# prefix = '/opt/ml/'
-prefix = './'
+prefix = '/app/'
+# prefix = './'
 
 IMG_ACTUAL_SIZE = 1024
 input_path = os.path.join(prefix , 'input/data/')
@@ -142,6 +142,7 @@ def train():
         test_images(metainfo,128,128)
         X, y = prepare_data(metainfo,128,128)
         classifier = create_model(X, y)
+        classifier.save(os.path.join(model_path, 'pd.h5'))
         print('Training is complete.')
     except Exception as e:
         # Write out an error file. This will be returned as the failure
