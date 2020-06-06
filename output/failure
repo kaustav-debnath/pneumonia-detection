@@ -1,5 +1,0 @@
-Exception during training: 'History' object has no attribute 'best_estimator_'
-Traceback (most recent call last):
-  File "<ipython-input-14-bcb919ad7d03>", line 11, in train
-    classifier.best_estimator_.model.save(
-AttributeError: 'History' object has no attribute 'best_estimator_'
