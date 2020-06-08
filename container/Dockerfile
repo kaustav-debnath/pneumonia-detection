@@ -15,7 +15,7 @@ ADD output /opt/program/output
 # install environment dependencies
 COPY "app.py" .
 COPY "run.sh" .
-COPY "train" .
+# COPY "train" .
 COPY "train.py" .
 # COPY "health-check-data.csv" .
 

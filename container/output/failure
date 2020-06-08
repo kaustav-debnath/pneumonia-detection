@@ -1,5 +1,5 @@
-Exception during training: 'History' object has no attribute 'save'
+Exception during training: list index out of range
 Traceback (most recent call last):
-  File "<ipython-input-21-5fc0d3a82976>", line 11, in train
-    classifier.save(os.path.join(model_path, 'pd.h5'))
-AttributeError: 'History' object has no attribute 'save'
+  File "<ipython-input-85-93e8f4593c04>", line 13, in train
+    print("%s: %.2f%%" % (classifier.metrics_names[2], scores[2]*100))
+IndexError: list index out of range

@@ -19,18 +19,12 @@ import cv2
 import glob, pylab
 
 import PIL
-# from tensorflow.keras.models import Sequential
-# from keras.wrappers.scikit_learn import KerasClassifier
-# from tensorflow.keras.layers import Input,GlobalAveragePooling2D, ZeroPadding2D, Convolution2D, Conv2DTranspose, MaxPooling2D, BatchNormalization, Dense, Dropout, Flatten, Activation 
-# from tensorflow.keras.layers import concatenate, add
+
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import binary_crossentropy
 
 from tensorflow.keras.models import Model,load_model
-# from tensorflow.keras.applications.imagenet_utils import decode_predictions 
-# from tensorflow.keras.applications import MobileNet, VGG16
-# from tensorflow.keras.applications.inception_v3 import InceptionV3
 
 # from tensorflow.keras.applications.mobilenet import preprocess_input
 # from sklearn.model_selection import GridSearchCV
@@ -63,15 +57,15 @@ def create_model(X_train, y_train):
     # declare the callbacks
     callbacks = [
         EarlyStopping(patience=10, verbose=1),
-        # ReduceLROnPlateau(factor=0.1, patience=5, min_lr=0.00001, verbose=1),
+        ReduceLROnPlateau(factor=0.1, patience=5, min_lr=0.00001, verbose=1),
         ModelCheckpoint(os.path.join(model_path,'model-pneumonia-classification.h5'), verbose=1, save_best_only=True, save_weights_only=True)
     ]
     # Fit gridsearch to training set
     history = classifier.fit(
         X_train,
         y_train,
-        batch_size=50, 
-        epochs=20, 
+        batch_size=100, 
+        epochs=1, 
         callbacks=callbacks,
         validation_split = 0.2
     )
@@ -79,22 +73,28 @@ def create_model(X_train, y_train):
 
 # method to prepare training data and labels    
 def prepare_data(data,img_width,img_height):
-    X_train = []
-    y_train = []
-    for key in tqdm(data):
+#     X_train = []
+#     y_train = []
+    X_train = np.zeros((len(data),img_width,img_height,3), dtype=np.float32)
+    y_train = np.zeros((len(data),2), dtype=np.float32)
+    index=0
+    for key in data:
         img = load_image(data[key]['image_path'],img_width,img_height)
         label = data[key]['target']
         if label == 1:
             encoded_label = [1,0]
         else:
             encoded_label = [0,1]
-        X_train.append(img)
-        y_train.append(encoded_label)
-    print('training data processed==>'+str(len(X_train)))
-    print('validation data processed==>'+str(len(y_train)))
-    X_train = np.array(X_train)
-    y_train = np.array(y_train)
-    X_train = np.stack((X_train,) * 3, -1)
+#         X_train.append(img)
+#         y_train.append(encoded_label)
+        X_train[index] = img
+        y_train[index] = encoded_label
+        index += 1
+    print('training data processed==>'+str(X_train.shape))
+    print('validation data processed==>'+str(y_train.shape))
+#     X_train = np.array(X_train)
+#     y_train = np.array(y_train)
+#     X_train = np.stack((X_train,) * 3, -1)
     return X_train, y_train
 
 # method to load the image and read .dcm file using pydicom
@@ -107,6 +107,7 @@ def load_image(image_path,img_width,img_height):
     #converting the image array data into float 
     res = res.astype(np.float32)/255
     cv2.destroyAllWindows()
+    res = np.stack((res,) * 3, -1)
     return res
 
 # draw an image with detected objects
@@ -129,18 +130,10 @@ def draw_image_with_boxes(res, boxes_list,factor):
      # show the plot
      plt.show()
 
-def test_images(data,img_width,img_height):
-    for key in tqdm(data):
-            res = load_image(data[key]['image_path'],img_width,img_height)
-            print('patientId==>',key)
-            print('target==>',data[key]["target"])
-            draw_image_with_boxes(res,data[key]["bboxes"],(IMG_ACTUAL_SIZE/img_width))
-            print('End Iterator-->',key,'--------------------------------------------------')
-
 # create a dictionary of metadata info from training labels file
 def create_dictionary(data):
     metainfo = {}
-    for index, row in tqdm(data.iterrows()): 
+    for index, row in data.iterrows(): 
         patientid = row['patientId']
         # print(patientid)
         if patientid not in metainfo:
@@ -155,6 +148,7 @@ def create_dictionary(data):
 
 def train():
     print('Starting the training.')
+    model_name = ''
     try:
         print(os.listdir("."))
         print('input->data->',os.listdir("./input/data"))
@@ -163,10 +157,8 @@ def train():
         df_train_labels = pd.read_csv(training_labels_path)
         df_train_labels = df_train_labels.fillna(0) #data imputation replacing NAN values with 0s
         metainfo = create_dictionary(df_train_labels)
-        test_images(metainfo,128,128)
         X, y = prepare_data(metainfo,128,128)
         classifier = create_model(X, y)
-        # classifier.model.save(os.path.join(model_path, 'pd.h5'))
         print('Training is complete.')
     except Exception as e:
         # Write out an error file. This will be returned as the failure
