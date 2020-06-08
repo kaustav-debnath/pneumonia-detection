@@ -31,6 +31,7 @@ from tensorflow.keras.models import Model,load_model
 
 
 prefix = '/opt/program'
+model_prefix = '/opt/ml/model'
 # prefix = './'
 
 IMG_ACTUAL_SIZE = 1024
@@ -44,10 +45,21 @@ training_labels_path = input_path + 'stage_2_train_labels.csv'
 print(training_path)
 print(training_labels_path)
 
-def create_model(X_train, y_train):
-    classifier = load_model(os.path.join(model_path,'mobilenet_model.h5'))
-
-    # Compiling the MobileNet
+def create_model(X_train, y_train, model_name):
+    #classifier = load_model(os.path.join(model_path,'mobilenet_model.h5'))
+    print('model name=>',model_name)
+    model_path_storage = ''
+    if model_name=='MobileNet':
+        classifier = load_model(os.path.join(model_path,'mobilenet_model.h5'))
+        model_path_storage = os.path.join(model_prefix,'mobilenet-classification.h5')
+    elif model_name=='VGGNet':
+        classifier = load_model(os.path.join(model_path,'base_model_vgg.h5'))
+        model_path_storage = os.path.join(model_prefix,'vggnet-classification.h5')
+    elif model_name=='InceptionV3':
+        classifier = load_model(os.path.join(model_path,'base_model_Inc.h5'))
+        model_path_storage = os.path.join(model_prefix,'inception-classification.h5')
+        
+    # Compiling the Loaded Model
     classifier.compile(
         optimizer='Adam',
         loss='categorical_crossentropy',
@@ -58,18 +70,18 @@ def create_model(X_train, y_train):
     callbacks = [
         EarlyStopping(patience=10, verbose=1),
         ReduceLROnPlateau(factor=0.1, patience=5, min_lr=0.00001, verbose=1),
-        ModelCheckpoint(os.path.join(model_path,'model-pneumonia-classification.h5'), verbose=1, save_best_only=True, save_weights_only=True)
+        ModelCheckpoint(model_path_storage, verbose=1, save_best_only=True, save_weights_only=True)
     ]
     # Fit gridsearch to training set
     history = classifier.fit(
         X_train,
         y_train,
-        batch_size=100, 
+        batch_size=32, 
         epochs=1, 
         callbacks=callbacks,
         validation_split = 0.2
     )
-    return history
+    return classifier, history
 
 # method to prepare training data and labels    
 def prepare_data(data,img_width,img_height):
@@ -150,15 +162,24 @@ def train():
     print('Starting the training.')
     model_name = ''
     try:
-        print(os.listdir("."))
-        print('input->data->',os.listdir("./input/data"))
-        print('output->',os.listdir("./output"))
-        print('model->',os.listdir("./model"))
         df_train_labels = pd.read_csv(training_labels_path)
         df_train_labels = df_train_labels.fillna(0) #data imputation replacing NAN values with 0s
         metainfo = create_dictionary(df_train_labels)
         X, y = prepare_data(metainfo,128,128)
-        classifier = create_model(X, y)
+#         print('Starting Training and Printing MobileNet classification*************************************************************')
+#         classifier,history = create_model(X, y, 'MobileNet')
+#         print('Ending Training and Printing  MobileNet classification*************************************************************')
+        print('/******************************************************************************************************************/')
+        print('/******************************************************************************************************************/')
+        print('Starting Training and Printing VggNet classification*************************************************************')
+        classifier,history = create_model(X, y, 'VGGNet')
+        print('Ending Training and Printing  VggNet classification*************************************************************')
+        print('/******************************************************************************************************************/')
+        print('/******************************************************************************************************************/')
+#         X_inception, y_inception = prepare_data(metainfo,299,299)
+#         print('Starting Training and Printing Inception classification*************************************************************')
+#         classifier,history = create_model(X_inception, y_inception, 'InceptionV3')
+#         print('Ending Training and Printing  Inception classification*************************************************************')
         print('Training is complete.')
     except Exception as e:
         # Write out an error file. This will be returned as the failure
@@ -172,7 +193,7 @@ def train():
             file=sys.stderr)
         # A non-zero exit code causes the training job to be marked as Failed.
         sys.exit(255)
-    return classifier
+    return classifier,history
             
 if __name__ == '__main__':
     train()
