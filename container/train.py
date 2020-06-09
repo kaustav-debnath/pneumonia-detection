@@ -85,8 +85,6 @@ def create_model(X_train, y_train, model_name):
 
 # method to prepare training data and labels    
 def prepare_data(data,img_width,img_height):
-#     X_train = []
-#     y_train = []
     X_train = np.zeros((len(data),img_width,img_height,3), dtype=np.float32)
     y_train = np.zeros((len(data),2), dtype=np.float32)
     index=0
@@ -104,9 +102,6 @@ def prepare_data(data,img_width,img_height):
         index += 1
     print('training data processed==>'+str(X_train.shape))
     print('validation data processed==>'+str(y_train.shape))
-#     X_train = np.array(X_train)
-#     y_train = np.array(y_train)
-#     X_train = np.stack((X_train,) * 3, -1)
     return X_train, y_train
 
 # method to load the image and read .dcm file using pydicom
@@ -132,8 +127,6 @@ def draw_image_with_boxes(res, boxes_list,factor):
      # plot each box
      for box in boxes_list:
           # get coordinates
-#           x1, y1, width, height = box
-            x1 = box[0]/factor
             y1 = box[1]/factor
             width = box[2]/factor
             height = box[3]/factor
