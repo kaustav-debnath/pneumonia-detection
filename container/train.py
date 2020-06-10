@@ -77,7 +77,7 @@ def create_model(X_train, y_train, model_name):
         X_train,
         y_train,
         batch_size=32, 
-        epochs=1, 
+        epochs=20, 
         callbacks=callbacks,
         validation_split = 0.2
     )
@@ -95,8 +95,6 @@ def prepare_data(data,img_width,img_height):
             encoded_label = [1,0]
         else:
             encoded_label = [0,1]
-#         X_train.append(img)
-#         y_train.append(encoded_label)
         X_train[index] = img
         y_train[index] = encoded_label
         index += 1
@@ -127,6 +125,8 @@ def draw_image_with_boxes(res, boxes_list,factor):
      # plot each box
      for box in boxes_list:
           # get coordinates
+#           x1, y1, width, height = box
+            x1 = box[0]/factor
             y1 = box[1]/factor
             width = box[2]/factor
             height = box[3]/factor
@@ -159,20 +159,10 @@ def train():
         df_train_labels = df_train_labels.fillna(0) #data imputation replacing NAN values with 0s
         metainfo = create_dictionary(df_train_labels)
         X, y = prepare_data(metainfo,128,128)
-#         print('Starting Training and Printing MobileNet classification*************************************************************')
-#         classifier,history = create_model(X, y, 'MobileNet')
-#         print('Ending Training and Printing  MobileNet classification*************************************************************')
-        print('/******************************************************************************************************************/')
-        print('/******************************************************************************************************************/')
-        print('Starting Training and Printing VggNet classification*************************************************************')
-        classifier,history = create_model(X, y, 'VGGNet')
-        print('Ending Training and Printing  VggNet classification*************************************************************')
-        print('/******************************************************************************************************************/')
-        print('/******************************************************************************************************************/')
-#         X_inception, y_inception = prepare_data(metainfo,299,299)
-#         print('Starting Training and Printing Inception classification*************************************************************')
-#         classifier,history = create_model(X_inception, y_inception, 'InceptionV3')
-#         print('Ending Training and Printing  Inception classification*************************************************************')
+        print('Starting Training and Printing MobileNet classification*************************************************************')
+        classifier,history = create_model(X, y, 'MobileNet')
+        print('Ending Training and Printing  MobileNet classification*************************************************************')
+        
         print('Training is complete.')
     except Exception as e:
         # Write out an error file. This will be returned as the failure
